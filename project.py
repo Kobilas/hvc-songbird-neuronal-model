@@ -154,6 +154,7 @@ for i in range(len(t) - 1):
     Vs[i+1] = Vs[i] + (kVs0 + kVs1) * dt / 2
     
     #print('loop i: ' + str(i) + '; Vs[i]: ' + str(Vs[i]) + '; Vs[i+1]: ' + str(Vs[i+1]))
+    #dendritic spike is supposed to lead to somatic spike burst
     if Vs[i] >= Vth:
         #print('hit')
         g_syn[i+1] = g_syn[i] + G
@@ -167,7 +168,7 @@ for i in range(len(t) - 1):
     kCa0 = getCaConc(Vd[i], m_infinity(Vd[i]), conc_ca[i])
     aCa = conc_ca[i] + kCa0 * dt
     kCa1 = getCaConc(Vd[i+1], m_infinity(Vd[i+1]), aCa)
-    conc_ca[i+1] = conc_ca[i] + (kCa0 + kCa1) * dtertte / 2
+    conc_ca[i+1] = conc_ca[i] + (kCa0 + kCa1) * dt / 2
     
     km0 = gatingVarMHN(alpha_m, beta_m, m[i], Vs[i])
     am = m[i] + km0 * dt
