@@ -147,7 +147,7 @@ Vrst = -85
 Vd[0] = Vrst
 Vs[0] = Vrst
 # adding initial value to g_syn provides more interesting results
-g_syn[0] = 0.1
+#g_syn[0] = 0.3
 Vth = 60
 
 for i in range(len(t) - 1):
