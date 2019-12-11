@@ -43,7 +43,7 @@ def I_Ld(V_d):
 def I_Ca(V_d, m_infinity):
     g_Ca = 200 # mS/cm^2 conductance
     E_Ca = 120 # mV reversal potential
-    return g_Ca * m_infinity**2 * (E_Ca - V_d) # high threshold calcium current
+    return g_Ca * (m_infinity**2) * (E_Ca - V_d) # high threshold calcium current
 # calcium dependent potassium current
 def I_CaK(V_d, q):
     g_CaK = 100 # mS/cm^2 conductance
@@ -119,7 +119,10 @@ def getTotalSomaCurrent(V_s, m, h, n, w, l, g_FFs):
 def getTotalDendriteCurrent(V_d, m_infinity, q, g_syn, g_FFd):
     return I_Ld(V_d) + I_Ca(V_d, m_infinity) + I_CaK(V_d, q) + I_syn(V_d, g_syn) + I_FFd(V_d, g_FFd)
 
-T_max = 200
+# 1000 ms is too long
+# 500 ms is also too long but more clear
+# 40 ms is good, but incorrect behavior
+T_max = 38
 dt = 0.01
 t = np.arange(0, T_max, dt).tolist()
 Vs = [0 for i in range(len(t))]
@@ -136,14 +139,16 @@ g_ffd = 1 # mS/cm^2
 g_ffs = 1 # mS/cm^2
 #I_ext = 0 # nA
 I_ext = [0 for i in range(len(t))]
-I_ext[25000:50000] = [1] * 25000
+#I_ext[2000:3000] = [1] * 1000
 G = 0.1
 #g_syn = 1
 tau_syn = 5 # ms
 Vrst = -85
 Vd[0] = Vrst
 Vs[0] = Vrst
-Vth = -60
+# adding initial value to g_syn provides more interesting results
+g_syn[0] = 0.1
+Vth = 60
 
 for i in range(len(t) - 1):
     kg0 = getG_syn(g_syn[i])
@@ -157,11 +162,15 @@ for i in range(len(t) - 1):
     
     #print('loop i: ' + str(i) + '; Vs[i]: ' + str(Vs[i]) + '; Vs[i+1]: ' + str(Vs[i+1]))
     #dendritic spike is supposed to lead to somatic spike burst
-    if Vs[i] >= Vth:
-        #print('hit')
+
+    if Vd[i] >= Vth:
         g_syn[i+1] = g_syn[i] + G
-        Vs[i+1] = Vrst
-    
+       # Vs[i+1] = Vrst
+    '''
+    # g_syn -> g_syn + G when spike arrives from another neuron at synapse with conductance G
+    if g_syn[i] >= G:
+        g_syn[i+1] += G
+    '''
     kVd0 = ((A_d * getTotalDendriteCurrent(Vd[i], m_infinity(Vd[i]), q[i], g_syn[i], g_ffd)) + (Vs[i] - Vd[i]) / R_c) / (C_m * A_d)
     aVd = Vd[i] + kVd0 * dt
     kVd1 = ((A_d * getTotalDendriteCurrent(aVd, m_infinity(aVd), q[i+1], g_syn[i+1], g_ffd)) + (Vs[i+1] - aVd) / R_c) / (C_m * A_d)
@@ -201,7 +210,17 @@ for i in range(len(t) - 1):
     aq = q[i] + kq0 * dt
     kq1 = gatingVarWLQ(q_infinity, tau_q(conc_ca[i+1]), aq, Vd[i+1])
     q[i+1] = q[i] + (kq0 + kq1) * dt / 2
-        
+
+plt.figure(1)
 plt.plot(t, Vs, 'r--', t, Vd, 'b--')
 plt.xlabel('Time (ms)')
 plt.ylabel('Voltage (mV)')
+plt.title('Time vs. Voltage of Soma (red) and Dendrite (blue)')
+plt.show()
+
+plt.figure(2)
+plt.plot(t, m, 'r--', t, h, 'b--', t, n, 'g--', t, w, 'y--', t, l, 'm--', t, q, 'k--')
+plt.xlabel('Time (ms)')
+plt.ylabel('Gating Variables')
+plt.title('Time vs. Gating Variable Value')
+plt.show()
