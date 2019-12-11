@@ -119,7 +119,7 @@ def getTotalSomaCurrent(V_s, m, h, n, w, l, g_FFs):
 def getTotalDendriteCurrent(V_d, m_infinity, q, g_syn, g_FFd):
     return I_Ld(V_d) + I_Ca(V_d, m_infinity) + I_CaK(V_d, q) + I_syn(V_d, g_syn) + I_FFd(V_d, g_FFd)
 
-T_max = 1000
+T_max = 200
 dt = 0.01
 t = np.arange(0, T_max, dt).tolist()
 Vs = [0 for i in range(len(t))]
@@ -134,7 +134,9 @@ conc_ca = [0 for i in range(len(t))]
 g_syn = [0 for i in range(len(t))]
 g_ffd = 1 # mS/cm^2
 g_ffs = 1 # mS/cm^2
-I_ext = 0 # nA
+#I_ext = 0 # nA
+I_ext = [0 for i in range(len(t))]
+I_ext[25000:50000] = [1] * 25000
 G = 0.1
 #g_syn = 1
 tau_syn = 5 # ms
@@ -145,11 +147,11 @@ Vth = -60
 
 for i in range(len(t) - 1):
     kg0 = getG_syn(g_syn[i])
-    kVs0 = ((A_s * getTotalSomaCurrent(Vs[i], m[i], h[i], n[i], w[i], l[i], g_ffs)) + I_ext + (Vd[i] - Vs[i]) / R_c) / (C_m * A_s)
+    kVs0 = ((A_s * getTotalSomaCurrent(Vs[i], m[i], h[i], n[i], w[i], l[i], g_ffs)) + I_ext[i] + (Vd[i] - Vs[i]) / R_c) / (C_m * A_s)
     ag = g_syn[i] + kg0 * dt
     aVs = Vs[i] + kVs0 * dt
     kg1 = getG_syn(ag)
-    kVs1 = ((A_s * getTotalSomaCurrent(aVs, m[i+1], h[i+1], n[i+1], w[i+1], l[i+1], g_ffs)) + I_ext + (Vd[i+1] - aVs) / R_c) / (C_m * A_s)
+    kVs1 = ((A_s * getTotalSomaCurrent(aVs, m[i+1], h[i+1], n[i+1], w[i+1], l[i+1], g_ffs)) + I_ext[i+1] + (Vd[i+1] - aVs) / R_c) / (C_m * A_s)
     g_syn[i+1] = g_syn[i] + (kg0 + kg1) * dt / 2
     Vs[i+1] = Vs[i] + (kVs0 + kVs1) * dt / 2
     
