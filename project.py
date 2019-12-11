@@ -123,7 +123,7 @@ def getTotalDendriteCurrent(V_d, m_infinity, q, g_syn, g_FFd):
 # 500 ms is also too long but more clear
 # 40 ms is good, but incorrect behavior
 T_max = 38
-dt = 0.01
+dt = 0.001
 t = np.arange(0, T_max, dt).tolist()
 Vs = [0 for i in range(len(t))]
 Vd = [0 for i in range(len(t))]
