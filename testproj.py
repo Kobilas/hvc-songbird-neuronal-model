@@ -64,18 +64,19 @@ n = [0 for i in range(len(t))]
 g_exc = [0 for i in range(len(t))]
 g_inh = [0 for i in range(len(t))]
 I_ext = [0 for i in range(len(t))]
-I_ext[2000:3000] = [18778] * 1000
-#g_exc = 0.5
-#g_inh = 0.2
-#I_ext = 1 # nA
-#I_ext = [0 for i in range(len(t))]
-#I_ext[2000:3000] = [1] * 1000
+start = 1000
+end = 3000
+I_ext[start:end] = [40000] * (end - start)
+#I_ext[start:end] = [26540] * (end - start)
+# generates 1 spike at 18778 nA
+# generates 2 spikes at 26540 nA
 G = 0.1
 tau_exc = 5 # ms
 tau_inh = 5 # ms
 tau = tau_exc
 Vrst = -80
 Vth = -55
+Vspk = 60
 V[0] = Vrst
 
 for i in range(len(t) - 1):
@@ -105,7 +106,7 @@ for i in range(len(t) - 1):
     n[i+1] = n[i] + (kn0 + kn1) * dt / 2
 
     if V[i+1] >= Vth:
-        V[i] = 60
+        V[i] = Vspk
         V[i+1] = Vrst
         g_exc[i+1] = g_exc[i] + G
 
