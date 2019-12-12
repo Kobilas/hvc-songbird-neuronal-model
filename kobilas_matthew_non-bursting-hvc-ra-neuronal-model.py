@@ -66,7 +66,7 @@ g_inh = [0 for i in range(len(t))]
 I_ext = [0 for i in range(len(t))]
 start = 1000
 end = 3000
-I_ext[start:end] = [40000] * (end - start)
+I_ext[start:end] = [50000] * (end - start)
 #I_ext[start:end] = [26540] * (end - start)
 # generates 1 spike at 18778 nA
 # generates 2 spikes at 26540 nA
