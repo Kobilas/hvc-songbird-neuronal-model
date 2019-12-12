@@ -29,7 +29,7 @@ def I_exc(V, g_exc):
     return -g_exc * V
 def I_inh(V, g_inh):
     E_I = -80
-    return -g_inh * (V- E_I)
+    return -g_inh * (V - E_I)
 
 # the general equation for the gating variables m, h, and n is
 # dx/dt = alpha_x(V)(1 - x) - beta_x(V)x
@@ -48,34 +48,51 @@ def n_infinity(V):
 def tau_n(V):
     return 0.1 + 0.5 / (1 + math.exp((V + 27) / 15))
 
-def getTotalCurrent(V, h, n):
+def getTotalCurrent(V, h, n, g_exc, g_inh, I_ext):
     return I_L(V) + I_Na(V, h) + I_Kdr(V, n) + I_exc(V, g_exc) + I_inh(V, g_inh) + I_ext / A
+def getConductance(g):
+    return -g / tau
 
 # 500 ms is also too long but more clear
 # 40 ms is good, but incorrect behavior
-T_max = 38
+T_max = 50
 dt = 0.01
 t = np.arange(0, T_max, dt).tolist()
 V = [0 for i in range(len(t))]
 h = [0 for i in range(len(t))]
 n = [0 for i in range(len(t))]
-g_syn = [0 for i in range(len(t))]
-g_exc = 0.5
-g_inh = 0.2
-I_ext = -1 # nA
+g_exc = [0 for i in range(len(t))]
+g_inh = [0 for i in range(len(t))]
+I_ext = [0 for i in range(len(t))]
+I_ext[2000:3000] = [18778] * 1000
+#g_exc = 0.5
+#g_inh = 0.2
+#I_ext = 1 # nA
 #I_ext = [0 for i in range(len(t))]
 #I_ext[2000:3000] = [1] * 1000
 G = 0.1
 tau_exc = 5 # ms
 tau_inh = 5 # ms
-Vrst = -85
-Vth = 60
+tau = tau_exc
+Vrst = -80
+Vth = -55
+V[0] = Vrst
 
 for i in range(len(t) - 1):
-    kV0 = getTotalCurrent(V[i], h[i], n[i]) / C_m
+    kV0 = getTotalCurrent(V[i], h[i], n[i], g_exc[i], g_inh[i], I_ext[i]) / C_m
     aV = V[i] + kV0 * dt
-    kV1 = getTotalCurrent(aV, h[i+1], n[i+1]) / C_m
+    kV1 = getTotalCurrent(aV, h[i+1], n[i+1], g_exc[i+1], g_inh[i+1], I_ext[i+1]) / C_m
     V[i+1] = V[i] + (kV0 + kV1) * dt / 2
+    
+    kgexc0 = getConductance(g_exc[i])
+    agexc = g_exc[i] + kgexc0 * dt
+    kgexc1 = getConductance(agexc)
+    g_exc[i+1] = g_exc[i] + (kgexc0 + kgexc1) * dt / 2
+    
+    kginh0 = getConductance(g_inh[i])
+    aginh = g_inh[i] + kginh0 * dt
+    kginh1 = getConductance(aginh)
+    g_inh[i+1] = g_inh[i] + (kginh0 + kginh1) * dt / 2
     
     kh0 = gatingVarHN(h_infinity, tau_h, h[i], V[i])
     ah = h[i] + kh0 * dt
@@ -87,11 +104,17 @@ for i in range(len(t) - 1):
     kn1 = gatingVarHN(n_infinity, tau_n, an, V[i])
     n[i+1] = n[i] + (kn0 + kn1) * dt / 2
 
+    if V[i+1] >= Vth:
+        V[i] = 60
+        V[i+1] = Vrst
+        g_exc[i+1] = g_exc[i] + G
+
 plt.figure(1)
 plt.plot(t, V, 'r--')
+plt.axis([0, 50, -80, 60])
 plt.xlabel('Time (ms)')
 plt.ylabel('Voltage (mV)')
-plt.title('Time vs. Voltage of Soma (red) and Dendrite (blue)')
+plt.title('Non-bursting model of HVC(RA) neurons')
 plt.show()
 
 plt.figure(2)
